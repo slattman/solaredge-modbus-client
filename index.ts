@@ -1,7 +1,7 @@
 /*!
  * solaredge-modbus-client
- * Copyright(c) 2018 Brad Slattman
- * MIT Licensed
+ * Copyright(c) 2018 Brad Slattman slattman@gmail.com
+ * GPL-3.0 Licensed
  */
 
 'use strict'
@@ -147,9 +147,9 @@ var SolareEdgeModbusClient = {
         });
     }
 
-}
+};
 
-module.exports = SolareEdgeModbusClient
+exports.SolareEdgeModbusClient = SolareEdgeModbusClient
 
 
 /*
