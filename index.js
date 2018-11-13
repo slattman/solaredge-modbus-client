@@ -9,12 +9,18 @@
 var net = require('net');
 var modbus = require('modbus-tcp');
 
-var SolareEdgeModbusClient = {
+var SolareEdgeModbusClient = SolareEdgeModbusClient || {
+
     version: 0,
+
     debug: true,
+
     host: null,
+
     port: null,
+
     offset: 40001,
+
     registers: [
         [40001, 2, "C_SunSpec_ID", "uint32", "Value = \"SunS\"(0x53756e53).Uniquely identifies this as a SunSpec MODBUS Map"],
         [40003, 1, "C_SunSpec_DID", "uint16", "Value = 0x0001.Uniquely identifies this as a SunSpec Common Model Block"],
@@ -67,6 +73,7 @@ var SolareEdgeModbusClient = {
         [40118, 2, "I_Event_3_Vendor", "uint32", "Not implemented"],
         [40120, 2, "I_Event_4_Vendor", "uint32", "3x2 in the inverter manual(LCD display) is translated to 0x03000002 in the I_Event_4_Vendor register (Available from inverter CPU firmware version 3.19xx and above) 4*"]
     ],
+
     data: [],
 
     setConnectionDetails: function(ip, port) {
@@ -149,7 +156,7 @@ var SolareEdgeModbusClient = {
 
 };
 
-exports.SolareEdgeModbusClient = SolareEdgeModbusClient
+exports.SolareEdgeModbusClient = SolareEdgeModbusClient;
 
 
 /*

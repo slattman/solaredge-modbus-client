@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/slattman/solaredge-modbus-client/issues"
   },
-  "homepage": "https://github.com/slattman/solaredge-modbus-client#readme"
+  "homepage": "https://github.com/slattman/solaredge-modbus-client#readme",
+  "dependencies": {
+    "modbus-tcp": "^0.4.13"
+  }
 }
