@@ -1,0 +1,19 @@
+{
+  "name": "solaredge-modbus-client",
+  "version": "1.0.0",
+  "description": "A simple modbus client reader for solaredge inverters.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/slattman/solaredge-modbus-client.git"
+  },
+  "author": "Brad Slattman",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/slattman/solaredge-modbus-client/issues"
+  },
+  "homepage": "https://github.com/slattman/solaredge-modbus-client#readme"
+}
