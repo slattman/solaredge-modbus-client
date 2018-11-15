@@ -72,16 +72,16 @@ export class SolarEdgeModbusClient {
         ]
     
         this.socket = Net.connect(this.config)
+        this.modbusClient= new Modbus.Client()
+
+        this.modbusClient.writer().pipe(this.socket)
+        this.socket.pipe(this.modbusClient.reader())
 
     }
 
     getData() {
 
         let promises = []
-        let modbusClient= new Modbus.Client()
-
-        modbusClient.writer().pipe(this.socket)
-        this.socket.pipe(modbusClient.reader())
 
         this.registers.map(reg => {
 
@@ -94,7 +94,7 @@ export class SolarEdgeModbusClient {
 
             promises.push(new Promise((resolve, reject) => {
 
-                modbusClient.readHoldingRegisters(1, start, end, (error, buffers) => {
+                this.modbusClient.readHoldingRegisters(1, start, end, (error, buffers) => {
 
                     if (error) {
 
