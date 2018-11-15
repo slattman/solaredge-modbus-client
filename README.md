@@ -3,7 +3,7 @@ A simple modbus client reader for solaredge inverters.
 
 ## Example usage
 
-`
+```javascript
 var SolarEdgeModbusClient = require('solaredge-modbus-client')
 
 var solar = new SolarEdgeModbusClient({
@@ -43,4 +43,6 @@ solar.getData().then(function (data) {
     solar.socket.destroy();
 
 })
-`
+```
+
+:metal:
