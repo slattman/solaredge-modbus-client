@@ -4,15 +4,22 @@
  * GPL-3.0 Licensed
  */
 
-import * as Net from 'net'
-import * as Modbus from 'modbus-tcp'
-import * as Mongo from 'mongodb'
+import EventEmmiter from 'events'
+import Net from 'net'
+import Modbus from 'modbus-tcp'
 
-export class SolarEdgeModbusClient {
+export class SolarEdgeModbusClient extends EventEmmiter {
 
-    constructor() {
+    constructor(config) {
 
-        this.offset = 40001;
+        super()
+
+        this.config = config || {
+            host: "192.168.0.20",
+            port: 502
+        }
+
+        this.offset = 40001
 
         this.registers = [
             [40001, 2, "C_SunSpec_ID", "uint32", "Value = \"SunS\"(0x53756e53).Uniquely identifies this as a SunSpec MODBUS Map"],
@@ -67,186 +74,82 @@ export class SolarEdgeModbusClient {
             [40120, 2, "I_Event_4_Vendor", "uint32", "3x2 in the inverter manual(LCD display) is translated to 0x03000002 in the I_Event_4_Vendor register (Available from inverter CPU firmware version 3.19xx and above) 4*"]
         ]
     
-        this.config = {
-            "net": {
-                "host": "192.168.0.20",
-                "port": "502"
-            },
-            "db": {
-                "uri": "mongodb://0.0.0.0:27017/",
-                "schema": "solardb"
-            }
-        }
+        this.socket = Net.connect(this.config)
 
     }
 
     getData() {
 
-        try {
+        let self = this
+        let promises = []
+        let modbusClient= new Modbus.Client()
 
-            console.log('connecting...')
+        modbusClient.writer().pipe(this.socket)
+        this.socket.pipe(modbusClient.reader())
 
-            let self = this
+        self.registers.map(reg => {
 
-            let socket = Net.connect(this.config.net, function () {
+            let start = 0
+            let end = 0
+            let data = []
 
-                let modbusClient= new Modbus.default.Client()    
-                modbusClient.writer().pipe(socket)
-                socket.pipe(modbusClient.reader())
+            start = reg[0] - self.offset
+            end = (start + reg[1]) - 1
 
-                console.log('connection opened to ' + self.config.net.host + ' on port ' + self.config.net.port)
-                console.log('reading modbus sunspec registers')
+            promises.push(new Promise(function (resolve, reject) {
 
-                let promises = []
+                modbusClient.readHoldingRegisters(1, start, end, function (error, buffers) {
 
-                self.registers.map(reg => {
+                    if (error) {
 
-                    let start = 0
-                    let end = 0
-                    let data = []
+                        reject(error)
 
-                    start = reg[0] - self.offset
-                    end = (start + reg[1]) - 1
+                    } else {
 
-                    promises.push(new Promise(function (resolve, reject) {
+                        let value = null
+                        const buffer = Buffer.concat(buffers)
 
-                        try {
-
-                            modbusClient.readHoldingRegisters(1, start, end, function (error, buffers) {
-
-                                if (error) {
-                                    reject('error reading register', reg, error)
-                                } else {
-
-                                    let value = null
-                                    const buffer = Buffer.concat(buffers)
-
-                                    if (reg[3] == "String(16)" || reg[3] == "String(32)") {
-                                        value = buffer.toString()
-                                    }
-
-                                    if (reg[3] == "uint16") {
-                                        value = buffer.readUInt16BE().toString()
-                                    }
-
-                                    if (reg[3] == "uint32" || reg[3] == "acc32") {
-                                        value = buffer.readUInt32BE().toString()
-                                    }
-
-                                    if (reg[3] == "int16") {
-                                        value = buffer.readInt16BE().toString()
-                                    }
-
-                                    if (reg[3] == "int32") {
-                                        value = buffer.readInt32BE().toString()
-                                    }
-
-                                    const result = {
-                                        id: reg[0],
-                                        size: reg[1],
-                                        name: reg[2],
-                                        type: reg[3],
-                                        description: reg[4],
-                                        buffers: buffers,
-                                        value: value
-                                    }
-
-                                    resolve(result)
-
-                                }
-
-                            })
-
-                        } catch (error) {
-
-                            reject('error reading register', reg, error)
-
+                        if (reg[3] == "String(16)" || reg[3] == "String(32)") {
+                            value = buffer.toString()
                         }
 
-                    }))
+                        if (reg[3] == "uint16") {
+                            value = buffer.readUInt16BE().toString()
+                        }
+
+                        if (reg[3] == "uint32" || reg[3] == "acc32") {
+                            value = buffer.readUInt32BE().toString()
+                        }
+
+                        if (reg[3] == "int16") {
+                            value = buffer.readInt16BE().toString()
+                        }
+
+                        if (reg[3] == "int32") {
+                            value = buffer.readInt32BE().toString()
+                        }
+
+                        const result = {
+                            id: reg[0],
+                            size: reg[1],
+                            name: reg[2],
+                            type: reg[3],
+                            description: reg[4],
+                            buffers: buffers,
+                            value: value
+                        }
+
+                        resolve(result)
+
+                    }
 
                 })
 
-                const sock = this
+            }))
 
-                Promise.all(promises).then(function (data) {
+        })
 
-                    const relaventData = [
-                        'C_Manufacturer',
-                        'C_Model',
-                        'C_Version',
-                        'C_SerialNumber',
-                        'I_AC_Current',
-                        'I_AC_VoltageAB',
-                        'I_AC_Power',
-                        'I_AC_Energy_WH',
-                        'I_DC_Current',
-                        'I_DC_Voltage',
-                        'I_DC_Power',
-                        'I_Temp_Sink'
-                    ]
-
-                    data.forEach(result => {
-
-                        if (relaventData.indexOf(result.name) != -1) {
-
-                            console.log(result.name + " - " + result.description + ": " + result.value)
-
-                        }
-
-                    })
-
-                    // let mongoClient = new Mongo.default.MongoClient()
-                    // mongoClient.connect(dburi, function (err, db) {
-                    //     if (err) throw err;
-                    //     var dbo = db.db("mydb");
-                    //     var myobj = { name: "Company Inc", address: "Highway 37" };
-                    //     dbo.collection("customers").insertOne(myobj, function (err, res) {
-                    //         if (err) throw err;
-                    //         console.log("1 document inserted");
-                    //         db.close();
-                    //     });
-                    // });
-
-                    sock.destroy();
-
-                })
-
-            })
-
-            socket.on('close', function () {
-                console.log("connection closed")
-            })
-
-            socket.on('data', function () {
-                //console.log("data", arguments)
-            })
-
-            socket.on('drain', function () {
-                console.log("drain", arguments)
-            })
-
-            socket.on('error', function () {
-                console.log("error", arguments)
-            })
-
-            socket.on('end', function () {
-                console.log("end", arguments)
-            })
-
-            socket.on('lookup', function () {
-                console.log("lookup", arguments)
-            })
-
-            socket.on('timeout', function () {
-                console.log("timeout", arguments)
-            })
-
-        } catch (e) {
-
-            console.log(e)
-
-        }
+        return Promise.all(promises)
 
     }
 
