@@ -1,6 +1,6 @@
 {
   "name": "solaredge-modbus-client",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A simple modbus client reader for solaredge inverters.",
   "main": "./main.js",
   "scripts": {
@@ -17,8 +17,6 @@
   },
   "homepage": "https://github.com/slattman/solaredge-modbus-client#readme",
   "dependencies": {
-  },
-  "devDependencies": {
     "esm": "^3.0.84",
     "modbus-tcp": "^0.4.13"
   }
