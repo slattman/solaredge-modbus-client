@@ -80,25 +80,24 @@ export class SolarEdgeModbusClient extends EventEmmiter {
 
     getData() {
 
-        let self = this
         let promises = []
         let modbusClient= new Modbus.Client()
 
         modbusClient.writer().pipe(this.socket)
         this.socket.pipe(modbusClient.reader())
 
-        self.registers.map(reg => {
+        this.registers.map(reg => {
 
             let start = 0
             let end = 0
             let data = []
 
-            start = reg[0] - self.offset
+            start = reg[0] - this.offset
             end = (start + reg[1]) - 1
 
-            promises.push(new Promise(function (resolve, reject) {
+            promises.push(new Promise((resolve, reject) => {
 
-                modbusClient.readHoldingRegisters(1, start, end, function (error, buffers) {
+                modbusClient.readHoldingRegisters(1, start, end, (error, buffers) => {
 
                     if (error) {
 
@@ -107,29 +106,29 @@ export class SolarEdgeModbusClient extends EventEmmiter {
                     } else {
 
                         let value = null
-                        const buffer = Buffer.concat(buffers)
+                        let buffer = Buffer.concat(buffers)
 
-                        if (reg[3] == "String(16)" || reg[3] == "String(32)") {
-                            value = buffer.toString()
+                        switch(reg[3]) {
+                            case "String(16)":
+                            case "String(32)":
+                                value = buffer.toString()
+                                break
+                            case "uint16":
+                                value = buffer.readUInt16BE().toString()
+                                break
+                            case "uint32":
+                            case "acc32":
+                                value = buffer.readUInt32BE().toString()
+                                break
+                            case "int16":
+                                value = buffer.readInt16BE().toString()
+                                break
+                            case "int32":
+                                value = buffer.readInt32BE().toString()
+                                break
                         }
 
-                        if (reg[3] == "uint16") {
-                            value = buffer.readUInt16BE().toString()
-                        }
-
-                        if (reg[3] == "uint32" || reg[3] == "acc32") {
-                            value = buffer.readUInt32BE().toString()
-                        }
-
-                        if (reg[3] == "int16") {
-                            value = buffer.readInt16BE().toString()
-                        }
-
-                        if (reg[3] == "int32") {
-                            value = buffer.readInt32BE().toString()
-                        }
-
-                        const result = {
+                        resolve({
                             id: reg[0],
                             size: reg[1],
                             name: reg[2],
@@ -137,9 +136,7 @@ export class SolarEdgeModbusClient extends EventEmmiter {
                             description: reg[4],
                             buffers: buffers,
                             value: value
-                        }
-
-                        resolve(result)
+                        })
 
                     }
 

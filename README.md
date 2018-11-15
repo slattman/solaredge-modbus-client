@@ -4,18 +4,16 @@ A simple modbus client reader for solaredge inverters.
 ## Example usage
 
 ```javascript
-var SolarEdgeModbusClient = require('solaredge-modbus-client')
+let SolarEdgeModbusClient = require('solaredge-modbus-client')
 
-var solar = new SolarEdgeModbusClient({
+let solar = new SolarEdgeModbusClient({
     host: "192.168.0.20",
     port: 502
 })
 
-solar.getData().then(function (data) {
+solar.getData().then((data) => {
 
-    let results = []
-
-    const relaventData = [
+    const RELAVENT_DATA = [
         'C_Manufacturer',
         'C_Model',
         'C_Version',
@@ -30,9 +28,11 @@ solar.getData().then(function (data) {
         'I_Temp_Sink'
     ]
 
-    data.forEach(result => {
+    let results = []
 
-        if (relaventData.indexOf(result.name) != -1) {
+    data.map(result => {
+
+        if (RELAVENT_DATA.indexOf(result.name) != -1) {
 
             console.log(result.name + " - " + result.description + ": " + result.value)
 
