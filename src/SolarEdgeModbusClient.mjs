@@ -4,15 +4,12 @@
  * GPL-3.0 Licensed
  */
 
-import EventEmmiter from 'events'
 import Net from 'net'
 import Modbus from 'modbus-tcp'
 
-export class SolarEdgeModbusClient extends EventEmmiter {
+export class SolarEdgeModbusClient {
 
     constructor(config) {
-
-        super()
 
         this.config = config || {
             host: "192.168.0.20",
