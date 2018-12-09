@@ -8,7 +8,8 @@ let SolarEdgeModbusClient = require('solaredge-modbus-client')
 
 let solar = new SolarEdgeModbusClient({
     host: "192.168.0.20",
-    port: 502
+    port: 502,
+    meters:0
 })
 
 solar.getData().then((data) => {
