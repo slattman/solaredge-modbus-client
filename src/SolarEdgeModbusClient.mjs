@@ -6,6 +6,7 @@
 
 import Net from 'net'
 import Modbus from 'modbus-tcp'
+import queue from 'queue'
 
 export class SolarEdgeModbusClient {
 
@@ -80,32 +81,26 @@ export class SolarEdgeModbusClient {
     }
 
     getData() {
-
-        let promises = []
+        const q = queue()
+        q.concurrency = 2
+        q.timeout = 500
+        let data = []
 
         this.registers.map(reg => {
+            let start = reg[0] - this.offset
+            let end = (start + reg[1]) - 1
 
-            let start = 0
-            let end = 0
-            let data = []
+            q.push(() => {
+                return new Promise((resolve, reject) => {
+                    this.modbusClient.readHoldingRegisters(1, start, end, (error, buffers) => {
 
-            start = reg[0] - this.offset
-            end = (start + reg[1]) - 1
-
-            promises.push(new Promise((resolve, reject) => {
-
-                this.modbusClient.readHoldingRegisters(1, start, end, (error, buffers) => {
-
-                    if (error) {
-
-                        reject(error)
-
-                    } else {
+                        if (error)
+                            return reject(error)
 
                         let value = null
                         let buffer = Buffer.concat(buffers)
 
-                        switch(reg[3]) {
+                        switch (reg[3]) {
                             case "String(16)":
                             case "String(32)":
                                 value = buffer.toString()
@@ -124,8 +119,7 @@ export class SolarEdgeModbusClient {
                                 value = buffer.readInt32BE().toString()
                                 break
                         }
-
-                        resolve({
+                        resolve(data.push({
                             id: reg[0],
                             size: reg[1],
                             name: reg[2],
@@ -133,18 +127,21 @@ export class SolarEdgeModbusClient {
                             description: reg[4],
                             buffers: buffers,
                             value: value
-                        })
+                        }))
 
-                    }
 
-                })
-
-            }))
+                    })
+                });
+            });
 
         })
 
-        return Promise.all(promises)
-
+        return new Promise((resolve, reject) =>
+            q.start(err => {
+                if (err) reject(err)
+                resolve(data);
+            })
+        )
     }
 
 }
