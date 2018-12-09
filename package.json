@@ -18,6 +18,7 @@
   "homepage": "https://github.com/slattman/solaredge-modbus-client#readme",
   "dependencies": {
     "esm": "^3.0.84",
-    "modbus-tcp": "^0.4.13"
+    "modbus-tcp": "^0.4.13",
+    "queue": "^4.5.1"
   }
 }
