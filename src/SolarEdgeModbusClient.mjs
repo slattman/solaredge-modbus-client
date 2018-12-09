@@ -77,6 +77,18 @@ export class SolarEdgeModbusClient {
         this.modbusClient.writer().pipe(this.socket)
         this.socket.pipe(this.modbusClient.reader())
 
+        process.stdin.resume()
+        function exitHandler(options, exitCode) {
+            console.log("disconnecting", options, exitCode)
+            this.socket.destroy()
+            process.exit()
+        }
+
+        process.on('exit', exitHandler.bind(this, { cleanup: true }))
+        process.on('SIGINT', exitHandler.bind(this, { exit: true }))
+        process.on('SIGUSR1', exitHandler.bind(this, { exit: true }))
+        process.on('SIGUSR2', exitHandler.bind(this, { exit: true }))
+        process.on('uncaughtException', exitHandler.bind(this, { exit: true }))
     }
 
     getData() {
