@@ -79,7 +79,7 @@ export class SolarEdgeModbusClient {
 
         process.stdin.resume()
         function exitHandler(options, exitCode) {
-            console.log("disconnecting", options, exitCode)
+            //console.log("disconnecting", options, exitCode)
             this.socket.destroy()
             process.exit()
         }
@@ -89,6 +89,7 @@ export class SolarEdgeModbusClient {
         process.on('SIGUSR1', exitHandler.bind(this, { exit: true }))
         process.on('SIGUSR2', exitHandler.bind(this, { exit: true }))
         process.on('uncaughtException', exitHandler.bind(this, { exit: true }))
+        
     }
 
     getData() {
