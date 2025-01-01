@@ -44,5 +44,3 @@ solar.getData().then((data) => {
 
 })
 ```
-
-:metal:
